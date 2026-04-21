@@ -84,5 +84,4 @@ MIT License
 
 ## Author
 
-ENSAI engineering student  
-Bayesian Computation – 2026
+ME
