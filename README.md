@@ -6,15 +6,17 @@ This repository provides practical implementations of core Bayesian computation 
 
 The goal is to bridge theory and practice by offering clear, reproducible code for Bayesian inference.
 
+
 ---
 
 ## Features
 
+* Markov Chain simulation and stationary distribution
 * Metropolis-Hastings algorithm
-* Gibbs sampling
-* Posterior estimation
-* Convergence diagnostics
-* Visualization tools
+* Gibbs sampler
+* Posterior estimation and credibility intervals
+* Convergence diagnostics (traceplots, ergodic quantiles, autocorrelations, MCMC error)
+* Comparison with frequentist methods
 
 ---
 
@@ -23,18 +25,19 @@ The goal is to bridge theory and practice by offering clear, reproducible code f
 ```
 bayesian-computation-toolkit/
 │
-├── data/                  # Datasets (if applicable)
-├── notebooks/             # Jupyter notebooks (experiments & demos)
-├── src/                   # Core implementation
-│   ├── mh.py              # Metropolis-Hastings
-│   ├── gibbs.py           # Gibbs sampler
-│   ├── utils.py           # Helper functions
+├── data/                        # Datasets
 │
-├── tests/                 # Unit tests
+├── src/                         # Core implementations
+├───├ mcmc/                         # Core implementations
+│      ├── mcmc.R           # Markov chain simulation 
+│      ├── metropolis.R              # Metropolis-Hastings 
+│      ├── gibbs.R                          # Gibbs sampler – ANOVA
+││    ├── ........                         
+├── diagnostics/                 # Convergence diagnostics
+│   └── coda_tools.R             # traceplot, cumuplot, autocorr, batchSE
+│
 ├── README.md
-├── requirements.txt
-├── LICENSE
-└── .gitignore
+└── LICENSE
 ```
 
 ---
@@ -44,40 +47,32 @@ bayesian-computation-toolkit/
 ```bash
 git clone https://github.com/your-username/bayesian-computation-toolkit.git
 cd bayesian-computation-toolkit
-pip install -r requirements.txt
 ```
 
----
+Install required R packages :
 
-## Example
-
-```python
-from src.mh import metropolis_hastings
-
-samples = metropolis_hastings(
-    target_density,
-    initial_state=0,
-    n_samples=10000,
-    step_size=1.0
-)
+```r
+install.packages(c("coda"))
 ```
 
 ---
 
 ## Applications
 
-* Bayesian inference
-* Posterior sampling
-* Probabilistic modeling
-* Statistical learning
+* One-way ANOVA under Bayesian framework
+* Bayesian linear regression with improper prior
+* Posterior sampling for non-standard distributions
+* Comparison of Bayesian vs frequentist estimates
 
 ---
 
 ## Roadmap
 
+* [ ] Metropolis-Hastings for Poisson distribution
 * [ ] Hamiltonian Monte Carlo (HMC)
 * [ ] Variational Inference
 * [ ] Advanced diagnostics (ESS, R-hat)
+* [ ] Shiny dashboard for interactive diagnostics
 
 ---
 
@@ -89,4 +84,5 @@ MIT License
 
 ## Author
 
-Your Name
+ENSAI engineering student  
+Bayesian Computation – 2026
