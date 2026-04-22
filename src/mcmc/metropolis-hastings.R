@@ -123,3 +123,126 @@ summary(window(echantillons, start = 1))
 summary(window(echantillons, start = 500))
 summary(window(echantillons, start = 100))
 summary(window(echantillons, start = 50))
+
+#==================================================================================
+#=======================================================================
+# ============================================================
+# Metropolis-Hastings – Loi a priori cos²(4πθ) sur [0,1]
+# ============================================================
+
+# --- Données (à adapter) ---
+n <- 20   # nombre d'essais
+x <- 14   # nombre de succès observés
+
+# --- Log a posteriori (pour éviter les underflows) ---
+log_post <- function(theta) {
+  if (theta <= 0 || theta >= 1) return(-Inf)
+  x * log(theta) + (n - x) * log(1 - theta) + 2 * log(abs(cos(4 * pi * theta)))
+}
+
+# --- Algorithme MH ---
+mh_beta <- function(theta0, L, tau) {
+  chain    <- numeric(L)
+  chain[1] <- theta0
+  n_accept <- 0
+  
+  for (t in 2:L) {
+    # Proposition gaussienne
+    theta_new <- rnorm(1, mean = chain[t-1], sd = 1/tau)
+    
+    # Rejet direct si hors support
+    if (theta_new <= 0 || theta_new >= 1) {
+      chain[t] <- chain[t-1]
+      next
+    }
+    
+    # Taux d'acceptation (sur log-échelle)
+    log_rho <- log_post(theta_new) - log_post(chain[t-1])
+    
+    if (log(runif(1)) <= log_rho) {
+      chain[t] <- theta_new
+      n_accept <- n_accept + 1
+    } else {
+      chain[t] <- chain[t-1]
+    }
+  }
+  
+  cat("Taux d'acceptation :", round(n_accept / L, 3), "\n")
+  return(chain)
+}
+
+# --- Simulation pour différentes valeurs de tau ---
+set.seed(42)
+L <- 5000
+
+chain_tau1  <- mh_beta(theta0 = 0.5, L = L, tau = 1)
+chain_tau5  <- mh_beta(theta0 = 0.5, L = L, tau = 5)
+chain_tau50 <- mh_beta(theta0 = 0.5, L = L, tau = 50)
+
+# --- Visualisation ---
+par(mfrow = c(3, 2))
+
+for (chain in list(chain_tau1, chain_tau5, chain_tau50)) {
+  lab <- switch(which(sapply(list(chain_tau1, chain_tau5, chain_tau50),
+                             identical, chain)),
+                "tau=1", "tau=5", "tau=50")
+  plot(chain, type = "l", col = "steelblue", 
+       main = paste("Traceplot –", lab), 
+       xlab = "Itération", ylab = expression(theta))
+  hist(chain, breaks = 50, freq = FALSE, col = "lightblue",
+       main = paste("Densité –", lab),
+       xlab = expression(theta))
+  curve(cos(4*pi*x)^2 * x^x_obs * (1-x)^(n-x_obs), 
+        add = TRUE, col = "red", lwd = 2)
+}
+
+par(mfrow = c(1, 1))
+
+# ===========================================
+
+# ============================================================
+# Étude de la convergence
+# ============================================================
+library(coda)
+
+# Conversion en objets mcmc
+mcmc_tau1  <- mcmc(chain_tau1)
+mcmc_tau5  <- mcmc(chain_tau5)
+mcmc_tau50 <- mcmc(chain_tau50)
+
+# --- Traceplots ---
+par(mfrow = c(2, 2))
+traceplot(mcmc_tau1,  main = "tau=1")
+traceplot(mcmc_tau5,  main = "tau=5")
+traceplot(mcmc_tau50, main = "tau=50")
+
+# --- Zoom début (burn-in) ---
+par(mfrow = c(2, 2))
+traceplot(window(mcmc_tau1,  end = 200), main = "tau=1  [début]")
+traceplot(window(mcmc_tau5,  end = 200), main = "tau=5  [début]")
+traceplot(window(mcmc_tau50, end = 200), main = "tau=50 [début]")
+
+# --- Quantiles ergodiques ---
+par(mfrow = c(2, 2))
+cumuplot(window(mcmc_tau1,  start = 1), main = "tau=1")
+cumuplot(window(mcmc_tau5,  start = 1), main = "tau=5")
+cumuplot(window(mcmc_tau50, start = 1), main = "tau=50")
+
+# --- Densités ---
+par(mfrow = c(2, 2))
+densplot(window(mcmc_tau1,  start = 500), main = "tau=1")
+densplot(window(mcmc_tau5,  start = 500), main = "tau=5")
+densplot(window(mcmc_tau50, start = 500), main = "tau=50")
+
+# --- Autocorrélations ---
+par(mfrow = c(2, 2))
+autocorr.plot(window(mcmc_tau1,  start = 500), main = "tau=1")
+autocorr.plot(window(mcmc_tau5,  start = 500), main = "tau=5")
+autocorr.plot(window(mcmc_tau50, start = 500), main = "tau=50")
+
+# --- Erreur MCMC ---
+cat("\n=== Résumé tau=1 ===\n");  print(summary(window(mcmc_tau1,  start = 500)))
+cat("\n=== Résumé tau=5 ===\n");  print(summary(window(mcmc_tau5,  start = 500)))
+cat("\n=== Résumé tau=50 ===\n"); print(summary(window(mcmc_tau50, start = 500)))
+
+# ===========================================
