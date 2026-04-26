@@ -133,6 +133,7 @@ summary(window(echantillons, start = 50))
 # --- Données (à adapter) ---
 n <- 20   # nombre d'essais
 x <- 14   # nombre de succès observés
+x_obs <- x
 
 # --- Log a posteriori (pour éviter les underflows) ---
 log_post <- function(theta) {
@@ -246,3 +247,26 @@ cat("\n=== Résumé tau=5 ===\n");  print(summary(window(mcmc_tau5,  start = 500
 cat("\n=== Résumé tau=50 ===\n"); print(summary(window(mcmc_tau50, start = 500)))
 
 # ===========================================
+
+# ============================================================
+# Exercice 2 – Question 2 : MH pour loi de Poisson
+# ============================================================
+
+mh_poisson <- function(lambda = 5, L = 5000, x0 = 0) {
+  chain    <- integer(L)
+  chain[1] <- x0
+  
+  for (t in 2:L) {
+    x_old <- chain[t-1]
+    Z     <- sample(c(-1, 1), size = 1, prob = c(0.5, 0.5))
+    y     <- x_old + Z
+    
+    if (y < 0) { chain[t] <- x_old; next }
+    
+    rho <- min(1, exp(y*log(lambda) - lfactorial(y) -
+                        x_old*log(lambda) + lfactorial(x_old)))
+    
+    chain[t] <- ifelse(runif(1) <= rho, y, x_old)
+  }
+  return(chain)
+}
