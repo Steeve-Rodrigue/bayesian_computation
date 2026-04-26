@@ -270,3 +270,71 @@ mh_poisson <- function(lambda = 5, L = 5000, x0 = 0) {
   }
   return(chain)
 }
+
+# ============================================================
+# Exercice 2 – Question 3 : Comparaison MCMC vs rpois
+# ============================================================
+
+set.seed(42)
+L      <- 5000
+lambda <- 5
+
+chain <- mh_poisson(lambda = lambda, L = L, x0 = 0)
+iid   <- rpois(L, lambda = lambda)
+
+# Comparaison graphique
+par(mfrow = c(1, 1))
+valeurs   <- 0:15
+freq_mcmc <- table(factor(chain, levels = valeurs)) / L
+freq_iid  <- table(factor(iid,   levels = valeurs)) / L
+freq_theo <- dpois(valeurs, lambda = lambda)
+
+barplot(rbind(freq_mcmc, freq_iid, freq_theo),
+        beside = TRUE, col = c("steelblue","coral","gray"),
+        main = "MCMC vs rpois vs théorique",
+        xlab = "x", ylab = "Fréquence",
+        legend.text = c("MCMC","rpois","théorique"))
+
+# Comparaison numérique
+cat("Moyenne  - MCMC:", round(mean(chain),4), 
+    "| rpois:", round(mean(iid),4), 
+    "| théo:", lambda, "\n")
+cat("Variance - MCMC:", round(var(chain),4), 
+    "| rpois:", round(var(iid),4),  
+    "| théo:", lambda, "\n")
+
+# ===========================================
+# ============================================================
+# Comparaison MCMC vs rpois
+# ============================================================
+
+par(mfrow = c(2, 2))
+
+# Historiques
+plot(chain, type = "l", col = "steelblue",
+     main = "Historique MCMC",
+     xlab = "Itération", ylab = "x")
+
+plot(iid, type = "l", col = "coral",
+     main = "Historique rpois (iid)",
+     xlab = "Itération", ylab = "x")
+
+# Distributions
+valeurs   <- 0:15
+freq_mcmc <- table(factor(chain, levels = valeurs)) / L
+freq_iid  <- table(factor(iid,   levels = valeurs)) / L
+freq_theo <- dpois(valeurs, lambda = lambda)
+
+barplot(rbind(freq_mcmc, freq_theo),
+        beside = TRUE, col = c("steelblue","gray"),
+        main = "MCMC vs théorique",
+        xlab = "x", ylab = "Fréquence",
+        legend.text = c("MCMC","théorique"))
+
+barplot(rbind(freq_iid, freq_theo),
+        beside = TRUE, col = c("coral","gray"),
+        main = "rpois vs théorique",
+        xlab = "x", ylab = "Fréquence",
+        legend.text = c("rpois","théorique"))
+
+par(mfrow = c(1, 1))
